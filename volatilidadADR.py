@@ -47,14 +47,16 @@ def analyze_volatility(ticker, intraday_data, previous_close):
     # Compare each 5-minute price to the previous day's close
     intraday_data['Above_Previous_Close'] = intraday_data['Adj Close'] > previous_close
     
-    # Calculate where crossings occurred: from positive to negative and vice versa
-    intraday_data['Cross'] = intraday_data['Above_Previous_Close'].astype(int).diff().fillna(0)
+    # Identify where crossings occurred: from positive to negative and vice versa
+    intraday_data['Cross'] = intraday_data['Above_Previous_Close'] != intraday_data['Above_Previous_Close'].shift(1)
     
-    # Count positive-to-negative and negative-to-positive transitions
-    pos_to_neg = (intraday_data['Cross'] == -1).sum()  # positive -> negative
-    neg_to_pos = (intraday_data['Cross'] == 1).sum()   # negative -> positive
+    # Count the number of crossings
+    total_crossings = intraday_data['Cross'].sum()
     
-    total_crossings = pos_to_neg + neg_to_pos
+    # Calculate how many transitions were from positive to negative and vice versa
+    pos_to_neg = ((intraday_data['Above_Previous_Close'].shift(1) == True) & (intraday_data['Above_Previous_Close'] == False)).sum()
+    neg_to_pos = ((intraday_data['Above_Previous_Close'].shift(1) == False) & (intraday_data['Above_Previous_Close'] == True)).sum()
+    
     return total_crossings, pos_to_neg, neg_to_pos
 
 # Initialize empty list to hold results
@@ -63,7 +65,6 @@ results = []
 # Loop through each ticker to fetch data and analyze volatility
 for ticker in tickers:
     try:
-        st.write(f"Procesando ticker: {ticker}")
         intraday_data = fetch_intraday_data(ticker, selected_intraday_date)
         previous_close, previous_date = fetch_previous_close(ticker, selected_previous_date)
 

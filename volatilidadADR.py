@@ -33,14 +33,15 @@ def fetch_previous_close(ticker):
 
         if data.empty:
             st.warning(f"No se encontraron datos para {ticker}.")
-            return None
+            return None, None
         
         # Get the close price for the last day before today
         previous_close = data['Adj Close'].iloc[-1]
-        return previous_close
+        previous_date = data.index[-1].date()  # Get the date of the last close
+        return previous_close, previous_date
     except Exception as e:
         st.error(f"Error al obtener datos de cierre anterior para {ticker}: {e}")
-        return None
+        return None, None
 
 def analyze_volatility(ticker, intraday_data, previous_close):
     """Analyze how many times the price crosses from positive to negative and vice versa."""
@@ -61,15 +62,20 @@ for ticker in tickers:
     try:
         st.write(f"Procesando ticker: {ticker}")
         intraday_data = fetch_intraday_data(ticker)
-        previous_close = fetch_previous_close(ticker)
+        previous_close, previous_date = fetch_previous_close(ticker)
 
         if intraday_data.empty or previous_close is None:
             continue
+        
+        # Get today's date from intraday data
+        today_date = intraday_data.index[-1].date()
         
         total_crossings, pos_to_neg, neg_to_pos = analyze_volatility(ticker, intraday_data, previous_close)
         
         results.append({
             'Ticker': ticker,
+            'Fecha Hoy': today_date,
+            'Fecha Cierre Anterior': previous_date,
             'Cruces Totales': total_crossings,
             'Positivo a Negativo': pos_to_neg,
             'Negativo a Positivo': neg_to_pos

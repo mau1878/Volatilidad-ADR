@@ -122,7 +122,7 @@ for ticker in tickers:
 df_results = pd.DataFrame(results)
 
 if extend_analysis:
-    st.subheader("Promedio y Mediana de Cruces en los Últimos 30 Días")
+    st.subheader("Promedio y Mediana de Cruces en los Últimos 30 Días Calendario")
     st.dataframe(df_results)
 else:
     st.subheader("Resultados de Volatilidad Intradía (1 Minuto)")

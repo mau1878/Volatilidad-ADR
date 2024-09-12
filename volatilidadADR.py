@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 # List of tickers
 tickers = ['BBAR', 'BMA', 'CEPU', 'CRESY', 'EDN', 'GGAL', 'IRS', 'LOMA', 'PAM', 'SUPV', 'TEO', 'TGS', 'YPF']
 
-st.title("Análisis de Volatilidad Intradía")
+st.title("Análisis de Volatilidad Intradía - Resolución de 1 Minuto")
 
 # Date selection
 st.subheader("Selecciona las fechas para el análisis")
@@ -14,8 +14,8 @@ selected_intraday_date = st.date_input("Fecha del análisis intradía (Hoy):", v
 selected_previous_date = st.date_input("Fecha del cierre anterior:", value=(datetime.now().date() - timedelta(days=1)))
 
 @st.cache_data
-def fetch_intraday_data(ticker, intraday_date, interval="5m"):
-    """Fetch the 5-minute interval intraday data for the selected date."""
+def fetch_intraday_data(ticker, intraday_date, interval="1m"):
+    """Fetch the 1-minute interval intraday data for the selected date."""
     try:
         data = yf.download(ticker, start=intraday_date, end=intraday_date + timedelta(days=1), interval=interval)
         if data.empty:
@@ -44,19 +44,17 @@ def fetch_previous_close(ticker, previous_date):
 
 def analyze_volatility(ticker, intraday_data, previous_close):
     """Analyze how many times the price crosses from positive to negative and vice versa."""
-    # Compare each 5-minute price to the previous day's close
+    # Compare each 1-minute price to the previous day's close
     intraday_data['Above_Previous_Close'] = intraday_data['Adj Close'] > previous_close
     
-    # Identify where crossings occurred: from positive to negative and vice versa
-    intraday_data['Cross'] = intraday_data['Above_Previous_Close'] != intraday_data['Above_Previous_Close'].shift(1)
+    # Calculate where crossings occurred: from positive to negative and vice versa
+    intraday_data['Cross'] = intraday_data['Above_Previous_Close'].astype(int).diff().fillna(0)
     
-    # Count the number of crossings
-    total_crossings = intraday_data['Cross'].sum()
+    # Count positive-to-negative and negative-to-positive transitions
+    pos_to_neg = (intraday_data['Cross'] == -1).sum()  # positive -> negative
+    neg_to_pos = (intraday_data['Cross'] == 1).sum()   # negative -> positive
     
-    # Calculate how many transitions were from positive to negative and vice versa
-    pos_to_neg = ((intraday_data['Above_Previous_Close'].shift(1) == True) & (intraday_data['Above_Previous_Close'] == False)).sum()
-    neg_to_pos = ((intraday_data['Above_Previous_Close'].shift(1) == False) & (intraday_data['Above_Previous_Close'] == True)).sum()
-    
+    total_crossings = pos_to_neg + neg_to_pos
     return total_crossings, pos_to_neg, neg_to_pos
 
 # Initialize empty list to hold results
@@ -65,6 +63,7 @@ results = []
 # Loop through each ticker to fetch data and analyze volatility
 for ticker in tickers:
     try:
+        st.write(f"Procesando ticker: {ticker}")
         intraday_data = fetch_intraday_data(ticker, selected_intraday_date)
         previous_close, previous_date = fetch_previous_close(ticker, selected_previous_date)
 
@@ -87,7 +86,7 @@ for ticker in tickers:
 
 # Convert results to DataFrame and display the table
 df_results = pd.DataFrame(results)
-st.subheader("Resultados de Volatilidad Intradía")
+st.subheader("Resultados de Volatilidad Intradía (1 Minuto)")
 st.dataframe(df_results)
 
 # Display bar plot for total crossings

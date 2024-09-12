@@ -48,11 +48,13 @@ def analyze_volatility(ticker, intraday_data, previous_close):
     pos_to_neg = (intraday_data['Cross'] == -1).sum()  # positive -> negative
     neg_to_pos = (intraday_data['Cross'] == 1).sum()   # negative -> positive
     total_crossings = pos_to_neg + neg_to_pos
-    return total_crossings
+    return total_crossings, pos_to_neg, neg_to_pos
 
 def analyze_last_30_days(ticker):
     """Analyze volatility for the last 30 trading days and calculate average and median crossings."""
     total_crossings_list = []
+    pos_to_neg_list = []
+    neg_to_pos_list = []
     current_date = selected_intraday_date
 
     for _ in range(30):
@@ -60,8 +62,10 @@ def analyze_last_30_days(ticker):
         previous_close, previous_date = fetch_previous_close(ticker, current_date - timedelta(days=1))
         
         if not intraday_data.empty and previous_close is not None:
-            total_crossings = analyze_volatility(ticker, intraday_data, previous_close)
+            total_crossings, pos_to_neg, neg_to_pos = analyze_volatility(ticker, intraday_data, previous_close)
             total_crossings_list.append(total_crossings)
+            pos_to_neg_list.append(pos_to_neg)
+            neg_to_pos_list.append(neg_to_pos)
         
         # Move to the previous trading day
         current_date -= timedelta(days=1)
@@ -69,10 +73,12 @@ def analyze_last_30_days(ticker):
     if total_crossings_list:
         average_crossings = sum(total_crossings_list) / len(total_crossings_list)
         median_crossings = pd.Series(total_crossings_list).median()
+        avg_pos_to_neg = sum(pos_to_neg_list) / len(pos_to_neg_list)
+        avg_neg_to_pos = sum(neg_to_pos_list) / len(neg_to_pos_list)
     else:
-        average_crossings = median_crossings = 0
+        average_crossings = median_crossings = avg_pos_to_neg = avg_neg_to_pos = 0
     
-    return average_crossings, median_crossings
+    return average_crossings, median_crossings, avg_pos_to_neg, avg_neg_to_pos
 
 # Initialize empty list to hold results
 results = []
@@ -83,11 +89,13 @@ for ticker in tickers:
         st.write(f"Procesando ticker: {ticker}")
         if extend_analysis:
             # Analyze last 30 days
-            average_crossings, median_crossings = analyze_last_30_days(ticker)
+            avg_crossings, median_crossings, avg_pos_to_neg, avg_neg_to_pos = analyze_last_30_days(ticker)
             results.append({
                 'Ticker': ticker,
-                'Cruces Promedio (30 días)': average_crossings,
-                'Cruces Medianos (30 días)': median_crossings
+                'Cruces Promedio (30 días)': avg_crossings,
+                'Cruces Medianos (30 días)': median_crossings,
+                'Promedio Cruces Pos->Neg (30 días)': avg_pos_to_neg,
+                'Promedio Cruces Neg->Pos (30 días)': avg_neg_to_pos
             })
         else:
             # Analyze selected date
@@ -97,12 +105,14 @@ for ticker in tickers:
             if intraday_data.empty or previous_close is None:
                 continue
             
-            total_crossings = analyze_volatility(ticker, intraday_data, previous_close)
+            total_crossings, pos_to_neg, neg_to_pos = analyze_volatility(ticker, intraday_data, previous_close)
             results.append({
                 'Ticker': ticker,
                 'Fecha Hoy': selected_intraday_date,
                 'Fecha Cierre Anterior': previous_date,
-                'Cruces Totales': total_crossings
+                'Cruces Totales': total_crossings,
+                'Cruces Pos->Neg': pos_to_neg,
+                'Cruces Neg->Pos': neg_to_pos
             })
     
     except Exception as e:
@@ -124,5 +134,5 @@ if not df_results.empty:
         st.subheader("Cruces Promedio en los Últimos 30 Días")
         st.bar_chart(df_results.set_index('Ticker')['Cruces Promedio (30 días)'])
     else:
-        st.subheader("Número de Cruces de Precios Intradía (Positivo a Negativo y Viceversa)")
+        st.subheader("Número de Cruces de Precios Intradía (Pos->Neg y Neg->Pos)")
         st.bar_chart(df_results.set_index('Ticker')['Cruces Totales'])

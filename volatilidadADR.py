@@ -56,6 +56,7 @@ def analyze_last_30_days(ticker):
     pos_to_neg_list = []
     neg_to_pos_list = []
     current_date = selected_intraday_date
+    start_date = current_date - timedelta(days=30)  # Define start date for 30-day period
 
     for _ in range(30):
         intraday_data = fetch_intraday_data(ticker, current_date)
@@ -78,7 +79,7 @@ def analyze_last_30_days(ticker):
     else:
         average_crossings = median_crossings = avg_pos_to_neg = avg_neg_to_pos = 0
     
-    return average_crossings, median_crossings, avg_pos_to_neg, avg_neg_to_pos
+    return average_crossings, median_crossings, avg_pos_to_neg, avg_neg_to_pos, start_date, selected_intraday_date
 
 # Initialize empty list to hold results
 results = []
@@ -89,9 +90,11 @@ for ticker in tickers:
         st.write(f"Procesando ticker: {ticker}")
         if extend_analysis:
             # Analyze last 30 days
-            avg_crossings, median_crossings, avg_pos_to_neg, avg_neg_to_pos = analyze_last_30_days(ticker)
+            avg_crossings, median_crossings, avg_pos_to_neg, avg_neg_to_pos, start_date, end_date = analyze_last_30_days(ticker)
             results.append({
                 'Ticker': ticker,
+                'Fecha de Inicio': start_date,
+                'Fecha de Fin': end_date,
                 'Cruces Promedio (30 días)': avg_crossings,
                 'Cruces Medianos (30 días)': median_crossings,
                 'Promedio Cruces Pos->Neg (30 días)': avg_pos_to_neg,
@@ -122,7 +125,7 @@ for ticker in tickers:
 df_results = pd.DataFrame(results)
 
 if extend_analysis:
-    st.subheader("Promedio y Mediana de Cruces en los Últimos 30 Días Calendario")
+    st.subheader("Promedio y Mediana de Cruces en los Últimos 30 Días")
     st.dataframe(df_results)
 else:
     st.subheader("Resultados de Volatilidad Intradía (1 Minuto)")

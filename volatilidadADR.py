@@ -8,13 +8,19 @@ tickers = ['BBAR', 'BMA', 'CEPU', 'CRESY', 'EDN', 'GGAL', 'IRS', 'LOMA', 'PAM', 
 
 st.title("Análisis de Volatilidad Intradía")
 
+# Date selectors for user to pick the dates
+today = datetime.now().date()
+start_date = st.date_input("Seleccione la Fecha de Cierre Anterior:", today - timedelta(days=5))
+end_date = st.date_input("Seleccione la Fecha de Datos Intradía:", today)
+
 @st.cache_data
-def fetch_intraday_data(ticker, interval="5m"):
-    """Fetch the latest 5-minute interval intraday data."""
+def fetch_intraday_data(ticker, interval="5m", date=None):
+    """Fetch intraday data for the selected date."""
     try:
-        data = yf.download(ticker, period="1d", interval=interval)
+        # Fetch 1-day intraday data for the selected end date
+        data = yf.download(ticker, start=date, end=date + timedelta(days=1), interval=interval)
         if data.empty:
-            st.warning(f"No se encontraron datos intradía para {ticker}.")
+            st.warning(f"No se encontraron datos intradía para {ticker} en la fecha {date}.")
             return pd.DataFrame()
         return data
     except Exception as e:
@@ -22,25 +28,22 @@ def fetch_intraday_data(ticker, interval="5m"):
         return pd.DataFrame()
 
 @st.cache_data
-def fetch_previous_close(ticker):
-    """Fetch the daily close price of the previous trading date."""
+def fetch_previous_close(ticker, previous_date):
+    """Fetch the daily close price for the selected previous trading day."""
     try:
-        today = datetime.now().date()
-        previous_trading_day = today - timedelta(days=1)
-
-        # Fetch daily data for the previous 2 days to get the closing price
-        data = yf.download(ticker, start=previous_trading_day - timedelta(days=2), end=previous_trading_day + timedelta(days=1))
+        # Fetch the daily data for the previous date selected by the user
+        data = yf.download(ticker, start=previous_date - timedelta(days=2), end=previous_date + timedelta(days=1))
 
         if data.empty:
-            st.warning(f"No se encontraron datos para {ticker}.")
+            st.warning(f"No se encontraron datos de cierre para {ticker} en la fecha {previous_date}.")
             return None, None
-        
-        # Get the close price for the last day before today
+
+        # Get the close price for the previous day
         previous_close = data['Adj Close'].iloc[-1]
-        previous_date = data.index[-1].date()  # Get the date of the last close
+        previous_date = data.index[-1].date()  # Get the exact date of the last close
         return previous_close, previous_date
     except Exception as e:
-        st.error(f"Error al obtener datos de cierre anterior para {ticker}: {e}")
+        st.error(f"Error al obtener el cierre anterior para {ticker}: {e}")
         return None, None
 
 def analyze_volatility(ticker, intraday_data, previous_close):
@@ -48,8 +51,8 @@ def analyze_volatility(ticker, intraday_data, previous_close):
     intraday_data['Cross'] = (intraday_data['Adj Close'] > previous_close).astype(int).diff().fillna(0)
 
     # Count positive-to-negative and negative-to-positive transitions
-    pos_to_neg = ((intraday_data['Cross'] == -1).sum())
-    neg_to_pos = ((intraday_data['Cross'] == 1).sum())
+    pos_to_neg = (intraday_data['Cross'] == -1).sum()
+    neg_to_pos = (intraday_data['Cross'] == 1).sum()
     
     total_crossings = pos_to_neg + neg_to_pos
     return total_crossings, pos_to_neg, neg_to_pos
@@ -61,21 +64,21 @@ results = []
 for ticker in tickers:
     try:
         st.write(f"Procesando ticker: {ticker}")
-        intraday_data = fetch_intraday_data(ticker)
-        previous_close, previous_date = fetch_previous_close(ticker)
+        intraday_data = fetch_intraday_data(ticker, date=end_date)
+        previous_close, previous_date_fetched = fetch_previous_close(ticker, start_date)
 
         if intraday_data.empty or previous_close is None:
             continue
         
-        # Get today's date from intraday data
-        today_date = intraday_data.index[-1].date()
+        # Get the selected end date (intraday data date)
+        intraday_date = intraday_data.index[-1].date()
         
         total_crossings, pos_to_neg, neg_to_pos = analyze_volatility(ticker, intraday_data, previous_close)
         
         results.append({
             'Ticker': ticker,
-            'Fecha Hoy': today_date,
-            'Fecha Cierre Anterior': previous_date,
+            'Fecha Hoy (Datos Intradía)': intraday_date,
+            'Fecha Cierre Anterior': previous_date_fetched,
             'Cruces Totales': total_crossings,
             'Positivo a Negativo': pos_to_neg,
             'Negativo a Positivo': neg_to_pos

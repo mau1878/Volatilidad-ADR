@@ -55,6 +55,7 @@ def analyze_last_30_days(ticker):
     total_crossings_list = []
     pos_to_neg_list = []
     neg_to_pos_list = []
+    daily_data = []
     current_date = selected_intraday_date
     start_date = current_date - timedelta(days=30)  # Define start date for 30-day period
 
@@ -67,19 +68,42 @@ def analyze_last_30_days(ticker):
             total_crossings_list.append(total_crossings)
             pos_to_neg_list.append(pos_to_neg)
             neg_to_pos_list.append(neg_to_pos)
+            daily_data.append({
+                'Date': current_date,
+                'Total_Crossings': total_crossings,
+                'Pos_to_Neg': pos_to_neg,
+                'Neg_to_Pos': neg_to_pos
+            })
         
         # Move to the previous trading day
         current_date -= timedelta(days=1)
-    
+
     if total_crossings_list:
         average_crossings = sum(total_crossings_list) / len(total_crossings_list)
         median_crossings = pd.Series(total_crossings_list).median()
         avg_pos_to_neg = sum(pos_to_neg_list) / len(pos_to_neg_list)
         avg_neg_to_pos = sum(neg_to_pos_list) / len(neg_to_pos_list)
+
+        # Convert daily data to DataFrame for analysis
+        df_daily = pd.DataFrame(daily_data)
+        
+        # Identify the most and least crossings
+        most_total_crossings = df_daily.loc[df_daily['Total_Crossings'].idxmax()]
+        least_total_crossings = df_daily.loc[df_daily['Total_Crossings'].idxmin()]
+        most_pos_to_neg = df_daily.loc[df_daily['Pos_to_Neg'].idxmax()]
+        least_pos_to_neg = df_daily.loc[df_daily['Pos_to_Neg'].idxmin()]
+        most_neg_to_pos = df_daily.loc[df_daily['Neg_to_Pos'].idxmax()]
+        least_neg_to_pos = df_daily.loc[df_daily['Neg_to_Pos'].idxmin()]
+
+        return (
+            average_crossings, median_crossings, avg_pos_to_neg, avg_neg_to_pos,
+            start_date, selected_intraday_date,
+            most_total_crossings, least_total_crossings,
+            most_pos_to_neg, least_pos_to_neg,
+            most_neg_to_pos, least_neg_to_pos
+        )
     else:
-        average_crossings = median_crossings = avg_pos_to_neg = avg_neg_to_pos = 0
-    
-    return average_crossings, median_crossings, avg_pos_to_neg, avg_neg_to_pos, start_date, selected_intraday_date
+        return (0, 0, 0, 0, None, None, None, None, None, None, None, None)
 
 # Initialize empty list to hold results
 results = []
@@ -90,7 +114,14 @@ for ticker in tickers:
         st.write(f"Procesando ticker: {ticker}")
         if extend_analysis:
             # Analyze last 30 days
-            avg_crossings, median_crossings, avg_pos_to_neg, avg_neg_to_pos, start_date, end_date = analyze_last_30_days(ticker)
+            (
+                avg_crossings, median_crossings, avg_pos_to_neg, avg_neg_to_pos,
+                start_date, end_date,
+                most_total_crossings, least_total_crossings,
+                most_pos_to_neg, least_pos_to_neg,
+                most_neg_to_pos, least_neg_to_pos
+            ) = analyze_last_30_days(ticker)
+
             results.append({
                 'Ticker': ticker,
                 'Fecha de Inicio': start_date,
@@ -98,7 +129,19 @@ for ticker in tickers:
                 'Cruces Promedio (30 días)': avg_crossings,
                 'Cruces Medianos (30 días)': median_crossings,
                 'Promedio Cruces Pos->Neg (30 días)': avg_pos_to_neg,
-                'Promedio Cruces Neg->Pos (30 días)': avg_neg_to_pos
+                'Promedio Cruces Neg->Pos (30 días)': avg_neg_to_pos,
+                'Fecha con Más Cruces Totales': most_total_crossings['Date'],
+                'Número Máximo de Cruces Totales': most_total_crossings['Total_Crossings'],
+                'Fecha con Menos Cruces Totales': least_total_crossings['Date'],
+                'Número Mínimo de Cruces Totales': least_total_crossings['Total_Crossings'],
+                'Fecha con Más Cruces Pos->Neg': most_pos_to_neg['Date'],
+                'Número Máximo de Cruces Pos->Neg': most_pos_to_neg['Pos_to_Neg'],
+                'Fecha con Menos Cruces Pos->Neg': least_pos_to_neg['Date'],
+                'Número Mínimo de Cruces Pos->Neg': least_pos_to_neg['Pos_to_Neg'],
+                'Fecha con Más Cruces Neg->Pos': most_neg_to_pos['Date'],
+                'Número Máximo de Cruces Neg->Pos': most_neg_to_pos['Neg_to_Pos'],
+                'Fecha con Menos Cruces Neg->Pos': least_neg_to_pos['Date'],
+                'Número Mínimo de Cruces Neg->Pos': least_neg_to_pos['Neg_to_Pos']
             })
         else:
             # Analyze selected date
@@ -125,7 +168,7 @@ for ticker in tickers:
 df_results = pd.DataFrame(results)
 
 if extend_analysis:
-    st.subheader("Promedio y Mediana de Cruces en los Últimos 30 Días")
+    st.subheader("Análisis Detallado de Cruces en los Últimos 30 Días")
     st.dataframe(df_results)
 else:
     st.subheader("Resultados de Volatilidad Intradía (1 Minuto)")

@@ -323,4 +323,4 @@ else:
 
 # Footer
 st.markdown("---")
-st.markdown("Desarrollado por [Tu Nombre](https://tuweb.com)")
+st.markdown("Desarrollado por MTaurus (https://x.com/MTaurus_ok)")

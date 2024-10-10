@@ -165,7 +165,7 @@ def analyze_last_30_days(ticker, end_date):
       pos_to_neg_list.append(pos_to_neg)
       neg_to_pos_list.append(neg_to_pos)
       daily_data.append({
-          'Fecha': current_date,
+          'Fecha': current_date.date(),  # Convert to date
           'Cruces Totales': total_crossings,
           'Cruces Pos->Neg': pos_to_neg,
           'Cruces Neg->Pos': neg_to_pos

@@ -143,7 +143,7 @@ def analyze_last_30_days(ticker, end_date):
   daily_data = []
 
   days_checked = 0
-  trading_days_needed = 30
+  trading_days_needed = 20
 
   for current_date in trading_days[::-1]:
       if days_checked >= trading_days_needed:

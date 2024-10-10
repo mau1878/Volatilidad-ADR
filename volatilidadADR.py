@@ -106,11 +106,16 @@ def fetch_intraday_data(ticker, intraday_date, interval="1m"):
 @st.cache_data(ttl=300, show_spinner=False)
 def fetch_previous_close(ticker, previous_date):
   try:
-      data = yf.download(ticker, start=previous_date, end=previous_date + timedelta(days=1), progress=False)
+      data = yf.download(ticker, start=previous_date - timedelta(days=5), end=previous_date + timedelta(days=1), progress=False)
+      if data.empty:
+          return None, None
+      # Filter to get the closest trading day on or before the previous_date
+      data = data[data.index.date <= previous_date]
       if data.empty:
           return None, None
       previous_close = data['Adj Close'].iloc[-1]
-      return previous_close, previous_date
+      actual_previous_date = data.index[-1].date()  # Convert to date
+      return previous_close, actual_previous_date
   except Exception as e:
       return None, None
 

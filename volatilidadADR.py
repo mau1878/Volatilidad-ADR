@@ -13,22 +13,22 @@ st.title("Análisis de Volatilidad Intradía - Resolución de 1 Minuto")
 
 # Define ticker sets
 ADR_TICKERS = [
-'BBAR', 'BMA', 'CEPU', 'CRESY', 'EDN', 'GGAL', 'IRS', 'LOMA',
-'PAM', 'SUPV', 'TEO', 'TGS', 'YPF'
+  'BBAR', 'BMA', 'CEPU', 'CRESY', 'EDN', 'GGAL', 'IRS', 'LOMA',
+  'PAM', 'SUPV', 'TEO', 'TGS', 'YPF'
 ]
 
 MERVAL_TICKERS = [
-"GGAL.BA", "YPFD.BA", "PAMP.BA", "TXAR.BA", "ALUA.BA", "CRES.BA",
-"SUPV.BA", "CEPU.BA", "BMA.BA", "TGSU2.BA", "TRAN.BA", "EDN.BA",
-"LOMA.BA", "MIRG.BA", "DGCU2.BA", "BBAR.BA", "MOLI.BA", "TGNO4.BA",
-"CGPA2.BA", "COME.BA", "IRSA.BA", "BYMA.BA", "TECO2.BA", "METR.BA",
-"CECO2.BA", "BHIP.BA", "AGRO.BA", "LEDE.BA", "CVH.BA", "HAVA.BA",
-"AUSO.BA", "VALO.BA", "SEMI.BA", "INVJ.BA", "CTIO.BA", "MORI.BA",
-"HARG.BA", "GCLA.BA", "SAMI.BA", "BOLT.BA", "MOLA.BA", "CAPX.BA",
-"OEST.BA", "LONG.BA", "GCDI.BA", "GBAN.BA", "CELU.BA", "FERR.BA",
-"CADO.BA", "GAMI.BA", "PATA.BA", "CARC.BA", "BPAT.BA", "INTR.BA",
-"GARO.BA", "FIPL.BA", "GRIM.BA", "DYCA.BA", "POLL.BA", "DOME.BA",
-"ROSE.BA", "MTR.BA"
+  "GGAL.BA", "YPFD.BA", "PAMP.BA", "TXAR.BA", "ALUA.BA", "CRES.BA",
+  "SUPV.BA", "CEPU.BA", "BMA.BA", "TGSU2.BA", "TRAN.BA", "EDN.BA",
+  "LOMA.BA", "MIRG.BA", "DGCU2.BA", "BBAR.BA", "MOLI.BA", "TGNO4.BA",
+  "CGPA2.BA", "COME.BA", "IRSA.BA", "BYMA.BA", "TECO2.BA", "METR.BA",
+  "CECO2.BA", "BHIP.BA", "AGRO.BA", "LEDE.BA", "CVH.BA", "HAVA.BA",
+  "AUSO.BA", "VALO.BA", "SEMI.BA", "INVJ.BA", "CTIO.BA", "MORI.BA",
+  "HARG.BA", "GCLA.BA", "SAMI.BA", "BOLT.BA", "MOLA.BA", "CAPX.BA",
+  "OEST.BA", "LONG.BA", "GCDI.BA", "GBAN.BA", "CELU.BA", "FERR.BA",
+  "CADO.BA", "GAMI.BA", "PATA.BA", "CARC.BA", "BPAT.BA", "INTR.BA",
+  "GARO.BA", "FIPL.BA", "GRIM.BA", "DYCA.BA", "POLL.BA", "DOME.BA",
+  "ROSE.BA", "MTR.BA"
 ]
 
 # Sidebar for user inputs
@@ -36,17 +36,17 @@ st.sidebar.header("Configuración del Análisis")
 
 # Ticker set selection
 ticker_set_option = st.sidebar.radio(
-"Selecciona el conjunto de tickers para analizar:",
-("ADRs", "Acciones del Merval")
+  "Selecciona el conjunto de tickers para analizar:",
+  ("ADRs", "Acciones del Merval")
 )
 
 # Assign selected tickers based on user choice
 if ticker_set_option == "ADRs":
-tickers = ADR_TICKERS
-st.sidebar.markdown("**Conjunto de Tickers Seleccionado:** ADRs")
+  tickers = ADR_TICKERS
+  st.sidebar.markdown("**Conjunto de Tickers Seleccionado:** ADRs")
 else:
-tickers = MERVAL_TICKERS
-st.sidebar.markdown("**Conjunto de Tickers Seleccionado:** Acciones del Merval")
+  tickers = MERVAL_TICKERS
+  st.sidebar.markdown("**Conjunto de Tickers Seleccionado:** Acciones del Merval")
 
 # Function to get trading days based on ticker set
 @st.cache_data
@@ -75,19 +75,19 @@ now_ba = datetime.now(buenos_aires).date()
 
 # Selected intraday date
 selected_intraday_date = st.sidebar.date_input(
-"Fecha del análisis intradía:",
-value=get_last_trading_day(now_ba, ticker_set_option)
+  "Fecha del análisis intradía:",
+  value=get_last_trading_day(now_ba, ticker_set_option)
 )
 
 # Ensure the selected intraday date is not in the future
 if selected_intraday_date > now_ba:
-st.sidebar.error("La fecha seleccionada no puede ser en el futuro.")
-selected_intraday_date = get_last_trading_day(now_ba, ticker_set_option)
+  st.sidebar.error("La fecha seleccionada no puede ser en el futuro.")
+  selected_intraday_date = get_last_trading_day(now_ba, ticker_set_option)
 
 # Selected previous close date
 selected_previous_date = st.sidebar.date_input(
-"Fecha del cierre anterior:",
-value=get_last_trading_day(selected_intraday_date - timedelta(days=1), ticker_set_option)
+  "Fecha del cierre anterior:",
+  value=get_last_trading_day(selected_intraday_date - timedelta(days=1), ticker_set_option)
 )
 
 # Checkbox to extend analysis to the last 30 days
@@ -111,7 +111,7 @@ def fetch_intraday_data(ticker, intraday_date, interval="1m"):
           return pd.DataFrame()
       return data
   except Exception as e:
-      st.error(f"Error fetching intraday data for {ticker}: {e}")
+      st.error(f"Error fetching intraday data para {ticker}: {e}")
       return pd.DataFrame()
 
 # Function to fetch previous close
@@ -124,6 +124,8 @@ def fetch_previous_close(ticker, previous_date, ticker_set):
       else:
           trading_days = get_trading_days(start_date=previous_date - timedelta(days=10), end_date=previous_date, ticker_set=ticker_set)
       
+      trading_days = sorted(trading_days)
+      
       if len(trading_days) == 0:
           return None, None
       
@@ -135,7 +137,7 @@ def fetch_previous_close(ticker, previous_date, ticker_set):
       actual_previous_date = data.index[-1].date()
       return previous_close, actual_previous_date
   except Exception as e:
-      st.error(f"Error fetching previous close for {ticker}: {e}")
+      st.error(f"Error fetching previous close para {ticker}: {e}")
       return None, None
 
 # Function to analyze volatility
@@ -231,104 +233,104 @@ def analyze_last_30_days(ticker, end_date, ticker_set):
 
 # Main processing code
 if confirm:
-results = []
+  results = []
 
-if extend_analysis:
-    st.subheader("Análisis Detallado de Cruces en los Últimos 30 Días")
+  if extend_analysis:
+      st.subheader("Análisis Detallado de Cruces en los Últimos 30 Días")
+  else:
+      st.subheader("Resultados de Volatilidad Intradía (1 Minuto)")
+
+  with st.spinner('Procesando tickers...'):
+      progress_bar = st.progress(0)
+      total_tickers = len(tickers)
+      for idx, ticker in enumerate(tickers):
+          try:
+              if extend_analysis:
+                  analysis = analyze_last_30_days(ticker, selected_intraday_date, ticker_set_option)
+
+                  if analysis is None:
+                      st.warning(f"No se pudo obtener suficiente información para {ticker}.")
+                      continue
+
+                  results.append({
+                      'Ticker': ticker,
+                      'Promedio Cruces Totales (30 días)': round(analysis['Promedio Cruces Totales'], 2),
+                      'Mediana Cruces Totales (30 días)': analysis['Mediana Cruces Totales'],
+                      'Promedio Cruces Pos->Neg (30 días)': round(analysis['Promedio Cruces Pos->Neg'], 2),
+                      'Promedio Cruces Neg->Pos (30 días)': round(analysis['Promedio Cruces Neg->Pos'], 2),
+                      'Fecha con Más Cruces Totales': analysis['Fecha con Más Cruces Totales'],
+                      'Máximo Cruces Totales': analysis['Máximo Cruces Totales'],
+                      'Fecha con Menos Cruces Totales': analysis['Fecha con Menos Cruces Totales'],
+                      'Mínimo Cruces Totales': analysis['Mínimo Cruces Totales'],
+                      'Fecha con Más Cruces Pos->Neg': analysis['Fecha con Más Cruces Pos->Neg'],
+                      'Máximo Cruces Pos->Neg': analysis['Máximo Cruces Pos->Neg'],
+                      'Fecha con Menos Cruces Pos->Neg': analysis['Fecha con Menos Cruces Pos->Neg'],
+                      'Mínimo Cruces Pos->Neg': analysis['Mínimo Cruces Pos->Neg'],
+                      'Fecha con Más Cruces Neg->Pos': analysis['Fecha con Más Cruces Neg->Pos'],
+                      'Máximo Cruces Neg->Pos': analysis['Máximo Cruces Neg->Pos'],
+                      'Fecha con Menos Cruces Neg->Pos': analysis['Fecha con Menos Cruces Neg->Pos'],
+                      'Mínimo Cruces Neg->Pos': analysis['Mínimo Cruces Neg->Pos']
+                  })
+              else:
+                  intraday_data = fetch_intraday_data(ticker, selected_intraday_date)
+                  if intraday_data.empty:
+                      st.warning(f"No hay datos intradía disponibles para {ticker} en {selected_intraday_date}.")
+                      continue
+
+                  previous_close_result = fetch_previous_close(ticker, selected_previous_date, ticker_set_option)
+                  if previous_close_result[0] is None:
+                      st.warning(f"No se pudo obtener el cierre anterior para {ticker}.")
+                      continue
+
+                  previous_close, actual_previous_date = previous_close_result
+
+                  total_crossings, pos_to_neg, neg_to_pos = analyze_volatility(intraday_data, previous_close)
+
+                  results.append({
+                      'Ticker': ticker,
+                      'Fecha Hoy': selected_intraday_date,
+                      'Fecha Cierre Anterior': actual_previous_date,
+                      'Cruces Totales': total_crossings,
+                      'Cruces Pos->Neg': pos_to_neg,
+                      'Cruces Neg->Pos': neg_to_pos
+                  })
+          except Exception as e:
+              st.error(f"Error al procesar {ticker}: {e}")
+          finally:
+              progress = (idx + 1) / total_tickers
+              progress_bar.progress(progress)
+
+      progress_bar.empty()
+
+  df_results = pd.DataFrame(results)
+
+  if extend_analysis:
+      if not df_results.empty:
+          df_results = df_results.sort_values(by='Promedio Cruces Totales (30 días)', ascending=False)
+          st.dataframe(df_results)
+
+          st.subheader("Promedio de Cruces Totales en los Últimos 30 Días")
+          fig1 = df_results[['Ticker', 'Promedio Cruces Totales (30 días)']].set_index('Ticker')
+          st.bar_chart(fig1)
+
+          st.subheader("Promedio de Cruces Pos->Neg y Neg->Pos en los Últimos 30 Días")
+          fig2 = df_results.set_index('Ticker')[['Promedio Cruces Pos->Neg (30 días)', 'Promedio Cruces Neg->Pos (30 días)']]
+          fig2 = fig2.sort_values(by='Promedio Cruces Pos->Neg (30 días)', ascending=False)
+          st.bar_chart(fig2)
+      else:
+          st.warning("No se encontraron resultados para la extensión de análisis.")
+  else:
+      if not df_results.empty:
+          df_results = df_results.sort_values(by='Cruces Totales', ascending=False)
+          st.dataframe(df_results)
+
+          st.subheader("Número de Cruces de Precios Intradía (Totales)")
+          fig = df_results[['Ticker', 'Cruces Totales']].set_index('Ticker')
+          st.bar_chart(fig)
+      else:
+          st.warning("No se encontraron resultados para el análisis intradía.")
+
+  st.markdown("---")
+  st.markdown("Desarrollado por MTaurus (https://x.com/MTaurus_ok)")
 else:
-    st.subheader("Resultados de Volatilidad Intradía (1 Minuto)")
-
-with st.spinner('Procesando tickers...'):
-    progress_bar = st.progress(0)
-    total_tickers = len(tickers)
-    for idx, ticker in enumerate(tickers):
-        try:
-            if extend_analysis:
-                analysis = analyze_last_30_days(ticker, selected_intraday_date, ticker_set_option)
-
-                if analysis is None:
-                    st.warning(f"No se pudo obtener suficiente información para {ticker}.")
-                    continue
-
-                results.append({
-                    'Ticker': ticker,
-                    'Promedio Cruces Totales (30 días)': round(analysis['Promedio Cruces Totales'], 2),
-                    'Mediana Cruces Totales (30 días)': analysis['Mediana Cruces Totales'],
-                    'Promedio Cruces Pos->Neg (30 días)': round(analysis['Promedio Cruces Pos->Neg'], 2),
-                    'Promedio Cruces Neg->Pos (30 días)': round(analysis['Promedio Cruces Neg->Pos'], 2),
-                    'Fecha con Más Cruces Totales': analysis['Fecha con Más Cruces Totales'],
-                    'Máximo Cruces Totales': analysis['Máximo Cruces Totales'],
-                    'Fecha con Menos Cruces Totales': analysis['Fecha con Menos Cruces Totales'],
-                    'Mínimo Cruces Totales': analysis['Mínimo Cruces Totales'],
-                    'Fecha con Más Cruces Pos->Neg': analysis['Fecha con Más Cruces Pos->Neg'],
-                    'Máximo Cruces Pos->Neg': analysis['Máximo Cruces Pos->Neg'],
-                    'Fecha con Menos Cruces Pos->Neg': analysis['Fecha con Menos Cruces Pos->Neg'],
-                    'Mínimo Cruces Pos->Neg': analysis['Mínimo Cruces Pos->Neg'],
-                    'Fecha con Más Cruces Neg->Pos': analysis['Fecha con Más Cruces Neg->Pos'],
-                    'Máximo Cruces Neg->Pos': analysis['Máximo Cruces Neg->Pos'],
-                    'Fecha con Menos Cruces Neg->Pos': analysis['Fecha con Menos Cruces Neg->Pos'],
-                    'Mínimo Cruces Neg->Pos': analysis['Mínimo Cruces Neg->Pos']
-                })
-            else:
-                intraday_data = fetch_intraday_data(ticker, selected_intraday_date)
-                if intraday_data.empty:
-                    st.warning(f"No hay datos intradía disponibles para {ticker} en {selected_intraday_date}.")
-                    continue
-
-                previous_close_result = fetch_previous_close(ticker, selected_previous_date, ticker_set_option)
-                if previous_close_result[0] is None:
-                    st.warning(f"No se pudo obtener el cierre anterior para {ticker}.")
-                    continue
-
-                previous_close, actual_previous_date = previous_close_result
-
-                total_crossings, pos_to_neg, neg_to_pos = analyze_volatility(intraday_data, previous_close)
-
-                results.append({
-                    'Ticker': ticker,
-                    'Fecha Hoy': selected_intraday_date,
-                    'Fecha Cierre Anterior': actual_previous_date,
-                    'Cruces Totales': total_crossings,
-                    'Cruces Pos->Neg': pos_to_neg,
-                    'Cruces Neg->Pos': neg_to_pos
-                })
-        except Exception as e:
-            st.error(f"Error al procesar {ticker}: {e}")
-        finally:
-            progress = (idx + 1) / total_tickers
-            progress_bar.progress(progress)
-
-    progress_bar.empty()
-
-df_results = pd.DataFrame(results)
-
-if extend_analysis:
-    if not df_results.empty:
-        df_results = df_results.sort_values(by='Promedio Cruces Totales (30 días)', ascending=False)
-        st.dataframe(df_results)
-
-        st.subheader("Promedio de Cruces Totales en los Últimos 30 Días")
-        fig1 = df_results[['Ticker', 'Promedio Cruces Totales (30 días)']].set_index('Ticker')
-        st.bar_chart(fig1)
-
-        st.subheader("Promedio de Cruces Pos->Neg y Neg->Pos en los Últimos 30 Días")
-        fig2 = df_results.set_index('Ticker')[['Promedio Cruces Pos->Neg (30 días)', 'Promedio Cruces Neg->Pos (30 días)']]
-        fig2 = fig2.sort_values(by='Promedio Cruces Pos->Neg (30 días)', ascending=False)
-        st.bar_chart(fig2)
-    else:
-        st.warning("No se encontraron resultados para la extensión de análisis.")
-else:
-    if not df_results.empty:
-        df_results = df_results.sort_values(by='Cruces Totales', ascending=False)
-        st.dataframe(df_results)
-
-        st.subheader("Número de Cruces de Precios Intradía (Totales)")
-        fig = df_results[['Ticker', 'Cruces Totales']].set_index('Ticker')
-        st.bar_chart(fig)
-    else:
-        st.warning("No se encontraron resultados para el análisis intradía.")
-
-st.markdown("---")
-st.markdown("Desarrollado por MTaurus (https://x.com/MTaurus_ok)")
-else:
-st.info("Ajusta los parámetros en la barra lateral y presiona **Confirmar** para iniciar el análisis.")
+  st.info("Ajusta los parámetros en la barra lateral y presiona **Confirmar** para iniciar el análisis.")

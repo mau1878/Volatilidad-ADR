@@ -158,9 +158,17 @@ def analyze_last_30_days(ticker, end_date):
   max_iterations = 100  # Prevent infinite loops
   iterations = 0
 
+  # Calculate the earliest date to analyze (30 days before the end date)
+  earliest_date = end_date - timedelta(days=30)
+
   while days_checked < trading_days_needed and iterations < max_iterations:
       iterations += 1
       previous_date = get_last_trading_day(current_date - timedelta(days=1))
+
+      # Stop if the current date is earlier than the earliest date
+      if current_date < earliest_date:
+          break
+
       intraday_data = fetch_intraday_data(ticker, current_date)
       previous_close_result = fetch_previous_close(ticker, previous_date)
 

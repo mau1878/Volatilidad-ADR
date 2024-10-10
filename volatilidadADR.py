@@ -53,10 +53,11 @@ st.sidebar.subheader("Selección de Fechas")
 
 # Helper function to get the last trading day using pandas_market_calendars
 @st.cache_data
-def get_last_trading_day(reference_date):
-  nyse = mcal.get_calendar('NYSE')
+def get_last_trading_day(reference_date, exchange='NYSE'):
+  nyse = mcal.get_calendar(exchange)
   trading_days = nyse.valid_days(start_date=reference_date - timedelta(days=7), end_date=reference_date).tz_localize(None)
   return trading_days[-1].to_pydatetime().date() if not trading_days.empty else reference_date
+
 
 # Current date in Buenos Aires timezone
 buenos_aires = pytz.timezone('America/Argentina/Buenos_Aires')
@@ -68,23 +69,32 @@ selected_intraday_date = st.sidebar.date_input(
   value=get_last_trading_day(now_ba)
 )
 
+
 # Ensure the selected intraday date is not in the future
 if selected_intraday_date > now_ba:
   st.sidebar.error("La fecha seleccionada no puede ser en el futuro.")
   selected_intraday_date = get_last_trading_day(now_ba)
 
-# Selected previous close date
+
 selected_previous_date = st.sidebar.date_input(
   "Fecha del cierre anterior:",
   value=get_last_trading_day(selected_intraday_date - timedelta(days=1))
 )
 
+
+
 # Checkbox to extend analysis to the last 30 days
 extend_analysis = st.sidebar.checkbox("Extender análisis a los últimos 30 días")
+
+if extend_analysis:
+  analysis_days = 30
+else:
+  analysis_days = 1
 
 # Display selected dates
 st.sidebar.markdown(f"**Fecha Intradía Seleccionada:** {selected_intraday_date}")
 st.sidebar.markdown(f"**Fecha de Cierre Anterior:** {selected_previous_date}")
+
 
 # Add confirm button
 confirm = st.sidebar.button("Confirmar")
@@ -105,17 +115,19 @@ def fetch_intraday_data(ticker, intraday_date, interval="1m"):
 
 # Function to fetch previous close
 @st.cache_data(ttl=300, show_spinner=False)
-def fetch_previous_close(ticker, previous_date):
+def fetch_previous_close(ticker, previous_date, exchange='NYSE'):
   try:
-      data = yf.download(ticker, start=previous_date - timedelta(days=5), end=previous_date + timedelta(days=1), progress=False)
-      if data.empty:
-          return None, None
-      # Filter to get the closest trading day on or before the previous_date
-      data = data[data.index.date <= previous_date]
+      calendar = mcal.get_calendar(exchange)
+      previous_date_ts = pd.Timestamp(previous_date)
+      previous_days = calendar.valid_days(start_date=previous_date - timedelta(days=7), end_date=previous_date).tz_localize(None)
+      actual_previous_date = previous_days[previous_days <= previous_date_ts][-1].to_pydatetime().date()
+
+      data = yf.download(ticker, start=actual_previous_date , end=actual_previous_date + timedelta(days=1), progress=False)
+
       if data.empty:
           return None, None
       previous_close = data['Adj Close'].iloc[-1]
-      actual_previous_date = data.index[-1].date()  # Convert to date
+
       return previous_close, actual_previous_date
   except Exception as e:
       st.error(f"Error fetching previous close for {ticker}: {e}")
@@ -132,10 +144,12 @@ def analyze_volatility(intraday_data, previous_close):
   return total_crossings, pos_to_neg, neg_to_pos
 
 # Function to analyze last 30 days
-def analyze_last_30_days(ticker, end_date):
-  nyse = mcal.get_calendar('NYSE')
+def analyze_last_30_days(ticker, end_date, exchange='NYSE'):
+  nyse = mcal.get_calendar(exchange)
   end_date_ts = pd.Timestamp(end_date)  # Convert end_date to Timestamp
-  trading_days = nyse.valid_days(start_date=end_date - timedelta(days=60), end_date=end_date).tz_localize(None)
+  start_date = end_date - timedelta(days=analysis_days)
+  trading_days = nyse.valid_days(start_date=start_date, end_date=end_date).tz_localize(None)
+  trading_days = trading_days[trading_days <= end_date_ts] # Filter dates after end_date
 
   total_crossings_list = []
   pos_to_neg_list = []
@@ -145,14 +159,22 @@ def analyze_last_30_days(ticker, end_date):
   days_checked = 0
   trading_days_needed = 20
 
-  for current_date in trading_days[::-1]:
-      if days_checked >= trading_days_needed:
-          break
+  date_range = trading_days[::-1] # Reverse date range to start from end_date
 
-      if current_date > end_date_ts:  # Correct comparison
+  if len(date_range) < trading_days_needed:
+      st.warning(f"No se encontraron suficientes días de negociación para {ticker} en los últimos {analysis_days} días. Se encontraron {len(date_range)} días.")
+      return None
+
+  for i in range(trading_days_needed):
+      current_date_ts = date_range[i]
+      current_date = current_date_ts.to_pydatetime().date()
+
+      # Find the previous trading day
+      previous_date_ts = trading_days[trading_days < current_date_ts][-1] if trading_days[trading_days < current_date_ts].size > 0 else None
+      if previous_date_ts is None:
+          st.warning(f"No se pudo encontrar la fecha de cierre anterior para {current_date}. Saltando este día.")
           continue
-
-      previous_date = trading_days[trading_days < current_date][-1]
+      previous_date = previous_date_ts.to_pydatetime().date()
 
       intraday_data = fetch_intraday_data(ticker, current_date)
       previous_close_result = fetch_previous_close(ticker, previous_date)
@@ -168,17 +190,13 @@ def analyze_last_30_days(ticker, end_date):
       pos_to_neg_list.append(pos_to_neg)
       neg_to_pos_list.append(neg_to_pos)
       daily_data.append({
-          'Fecha': current_date.date(),  # Convert to date
+          'Fecha': current_date,  # Convert to date
           'Cruces Totales': total_crossings,
           'Cruces Pos->Neg': pos_to_neg,
           'Cruces Neg->Pos': neg_to_pos
       })
 
       days_checked += 1
-
-  if days_checked < trading_days_needed:
-      st.warning(f"No se encontraron suficientes días de negociación para {ticker}. Se encontraron {days_checked} días.")
-      return None
 
   if total_crossings_list:
       average_crossings = sum(total_crossings_list) / len(total_crossings_list)
@@ -216,6 +234,7 @@ def analyze_last_30_days(ticker, end_date):
   else:
       return None
 
+
 # Main processing code
 if confirm:
   results = []
@@ -228,10 +247,13 @@ if confirm:
   with st.spinner('Procesando tickers...'):
       progress_bar = st.progress(0)
       total_tickers = len(tickers)
+
+      exchange = 'BUE' if ticker_set_option == "Acciones del Merval" else 'NYSE'
+
       for idx, ticker in enumerate(tickers):
           try:
               if extend_analysis:
-                  analysis = analyze_last_30_days(ticker, selected_intraday_date)
+                  analysis = analyze_last_30_days(ticker, selected_intraday_date, exchange=exchange)
 
                   if analysis is None:
                       st.warning(f"No se pudo obtener suficiente información para {ticker}.")
@@ -262,7 +284,7 @@ if confirm:
                       st.warning(f"No hay datos intradía disponibles para {ticker} en {selected_intraday_date}.")
                       continue
 
-                  previous_close_result = fetch_previous_close(ticker, selected_previous_date)
+                  previous_close_result = fetch_previous_close(ticker, selected_previous_date, exchange=exchange)
                   if previous_close_result[0] is None:
                       st.warning(f"No se pudo obtener el cierre anterior para {ticker}.")
                       continue

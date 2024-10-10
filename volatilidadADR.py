@@ -56,7 +56,7 @@ st.sidebar.subheader("Selección de Fechas")
 def get_last_trading_day(reference_date):
   nyse = mcal.get_calendar('NYSE')
   trading_days = nyse.valid_days(start_date=reference_date - timedelta(days=7), end_date=reference_date).tz_localize(None)
-  return trading_days[-1].to_pydatetime().date()
+  return trading_days[-1].to_pydatetime().date() if not trading_days.empty else reference_date
 
 # Current date in Buenos Aires timezone
 buenos_aires = pytz.timezone('America/Argentina/Buenos_Aires')
@@ -100,6 +100,7 @@ def fetch_intraday_data(ticker, intraday_date, interval="1m"):
           return pd.DataFrame()
       return data
   except Exception as e:
+      st.error(f"Error fetching intraday data for {ticker}: {e}")
       return pd.DataFrame()
 
 # Function to fetch previous close
@@ -117,6 +118,7 @@ def fetch_previous_close(ticker, previous_date):
       actual_previous_date = data.index[-1].date()  # Convert to date
       return previous_close, actual_previous_date
   except Exception as e:
+      st.error(f"Error fetching previous close for {ticker}: {e}")
       return None, None
 
 # Function to analyze volatility

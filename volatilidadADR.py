@@ -132,6 +132,7 @@ def analyze_volatility(intraday_data, previous_close):
 # Function to analyze last 30 days
 def analyze_last_30_days(ticker, end_date):
   nyse = mcal.get_calendar('NYSE')
+  end_date_ts = pd.Timestamp(end_date)  # Convert end_date to Timestamp
   trading_days = nyse.valid_days(start_date=end_date - timedelta(days=60), end_date=end_date).tz_localize(None)
 
   total_crossings_list = []
@@ -146,7 +147,7 @@ def analyze_last_30_days(ticker, end_date):
       if days_checked >= trading_days_needed:
           break
 
-      if current_date > end_date:
+      if current_date > end_date_ts:  # Correct comparison
           continue
 
       previous_date = trading_days[trading_days < current_date][-1]

@@ -302,12 +302,14 @@ if extend_analysis:
       # Visualization: Promedio Cruces Totales (30 días)
       st.subheader("Promedio de Cruces Totales en los Últimos 30 Días")
       fig1 = df_results[['Ticker', 'Promedio Cruces Totales (30 días)']].set_index('Ticker')
-      st.bar_chart(fig1)
+      fig1_sorted = fig1.sort_values(by='Promedio Cruces Totales (30 días)', ascending=False)  # Sort in descending order
+      st.bar_chart(fig1_sorted)
 
       # Visualization: Promedio Cruces Pos->Neg y Neg->Pos (30 días)
       st.subheader("Promedio de Cruces Pos->Neg y Neg->Pos en los Últimos 30 Días")
       fig2 = df_results.set_index('Ticker')[['Promedio Cruces Pos->Neg (30 días)', 'Promedio Cruces Neg->Pos (30 días)']]
-      st.bar_chart(fig2)
+      fig2_sorted = fig2.sort_values(by='Promedio Cruces Pos->Neg (30 días)', ascending=False)  # Sort by one of the columns
+      st.bar_chart(fig2_sorted)
   else:
       st.warning("No se encontraron resultados para la extensión de análisis.")
 else:
@@ -317,7 +319,8 @@ else:
       # Visualization: Cruces Totales
       st.subheader("Número de Cruces de Precios Intradía (Totales)")
       fig = df_results[['Ticker', 'Cruces Totales']].set_index('Ticker')
-      st.bar_chart(fig)
+      fig_sorted = fig.sort_values(by='Cruces Totales', ascending=False)  # Sort in descending order
+      st.bar_chart(fig_sorted)
   else:
       st.warning("No se encontraron resultados para el análisis intradía.")
 

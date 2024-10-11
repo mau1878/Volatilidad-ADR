@@ -155,8 +155,11 @@ def analyze_last_30_days(ticker, end_date, ticker_set):
   start_date = end_date - timedelta(days=30)
   trading_days = get_trading_days(start_date=start_date, end_date=end_date, ticker_set=ticker_set)
 
+  # Convertir end_date a datetime para la comparación
+  end_datetime = datetime.combine(end_date, datetime.min.time())
+
   # Filtrar trading_days que sean <= end_date
-  trading_days = [day for day in trading_days if day <= end_date]
+  trading_days = [day for day in trading_days if day <= end_datetime]
 
   # Tomar los últimos 20 días de negociación dentro de los últimos 30 días calendario
   trading_days_sorted = sorted(trading_days)

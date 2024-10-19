@@ -194,6 +194,7 @@ def analyze_last_30_days(ticker, end_date, ticker_set_option):
   return summary_data
 
 # Main execution block
+# Main execution block
 if confirm:
   for ticker in tickers:
       intraday_data = fetch_intraday_data(ticker, selected_intraday_date)
@@ -229,7 +230,3 @@ if confirm:
           st.write("#### Resumen de Variaciones % en los Últimos 30 Días:")
           summary_data = analyze_last_30_days(ticker, selected_intraday_date, ticker_set_option)
           st.dataframe(summary_data)
-
-# Footer
-st.markdown("---")
-st.markdown("Análisis realizado por [Tu Nombre](https://tu-sitio-web.com).")

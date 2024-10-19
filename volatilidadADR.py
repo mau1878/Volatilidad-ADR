@@ -178,49 +178,46 @@ def analyze_last_30_days(ticker, end_date, ticker_set):
         try:
             date_close, _ = fetch_previous_close(ticker, date, ticker_set)
             if date_close is None:
-                continue  # Si no hay cierre para esta fecha, saltar
-            
-            # Encontrar el siguiente día hábil después de 'date'
-            next_trading_day = get_last_trading_day(date + timedelta(days=1), ticker_set)
-            if next_trading_day > date:  # Asegurarse de que el siguiente día sea posterior
-                next_close, _ = fetch_previous_close(ticker, next_trading_day, ticker_set)
-                if next_close is None:
-                    continue  # Si no hay cierre para esta fecha, saltar
-                variation = (next_close - date_close) / date_close * 100
-                summary_data = summary_data.append({"Fecha": next_trading_day, "Variación %": variation}, ignore_index=True)
+                continue  # Skip if no data found
+            previous_close = date_close
+            intraday_data = fetch_intraday_data(ticker, date, interval="1m")
+            if intraday_data.empty:
+                continue  # Skip if no data found
+            daily_return = ((intraday_data['Adj Close'].iloc[-1] - previous_close) / previous_close) * 100
+            summary_data = summary_data.append({"Fecha": date.date(), "Variación %": daily_return}, ignore_index=True)
         except Exception as e:
-            st.error(f"Error en el análisis de los últimos 30 días para {ticker}: {e}")
-
+            st.warning(f"Error analyzing date {date}: {e}")
     return summary_data
 
-# Main execution block
+# Main logic execution
 if confirm:
     for ticker in tickers:
-        intraday_data = fetch_intraday_data(ticker, selected_intraday_date)
-        previous_close, actual_previous_date = fetch_previous_close(ticker, selected_previous_date, ticker_set)
+        # Fetch and analyze intraday data
+        intraday_data = fetch_intraday_data(ticker, selected_intraday_date, interval="1m")
+        previous_close, actual_previous_date = fetch_previous_close(ticker, selected_previous_date, ticker_set_option)
 
-        # Display intraday data
-        if not intraday_data.empty:
-            st.subheader(f"Datos Intradía para {ticker} en {selected_intraday_date}")
-            st.line_chart(intraday_data['Adj Close'], use_container_width=True)
+        if intraday_data.empty:
+            st.warning(f"No se encontraron datos intradía para {ticker}.")
+            continue
 
-            total_crossings, pos_to_neg, neg_to_pos = analyze_volatility(intraday_data, previous_close)
-
-            st.markdown(f"**Cruces Totales:** {total_crossings}")
-            st.markdown(f"**Cruces de Arriba a Abajo:** {pos_to_neg}")
-            st.markdown(f"**Cruces de Abajo a Arriba:** {neg_to_pos}")
-
-        # Display previous close
-        if previous_close is not None:
-            st.markdown(f"**Cierre Anterior para {ticker}:** ARS {previous_close:.2f} (Fecha: {actual_previous_date})")
-        else:
+        if previous_close is None:
             st.warning(f"No se encontró el cierre anterior para {ticker}.")
+            continue
 
-        # Analyze last 30 days if checkbox is selected
+        # Analyze volatility
+        total_crossings, pos_to_neg, neg_to_pos = analyze_volatility(intraday_data, previous_close)
+
+        st.markdown(f"### Análisis para: **{ticker}**")
+        st.write(f"**Total de Cruces:** {total_crossings}")
+        st.write(f"**Cruces Positivos a Negativos:** {pos_to_neg}")
+        st.write(f"**Cruces Negativos a Positivos:** {neg_to_pos}")
+
+        # If extending analysis, get summary for the last 30 days
         if extend_analysis:
-            st.subheader(f"Análisis de los Últimos 30 Días para {ticker}")
-            last_30_days_data = analyze_last_30_days(ticker, selected_intraday_date, ticker_set)
-            if not last_30_days_data.empty:
-                st.dataframe(last_30_days_data)
-            else:
-                st.warning(f"No se encontraron datos para el análisis de los últimos 30 días para {ticker}.")
+            summary_data = analyze_last_30_days(ticker, selected_intraday_date, ticker_set_option)
+            st.write("#### Resumen de Variaciones % en los Últimos 30 Días:")
+            st.dataframe(summary_data)
+
+# Footer
+st.markdown("---")
+st.markdown("Análisis realizado por [Tu Nombre](https://tu-sitio-web.com).")

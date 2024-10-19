@@ -1,11 +1,11 @@
-   import streamlit as st
-   import yfinance as yf
-   import pandas as pd
-   from datetime import datetime, timedelta
-   import pytz
-   import pandas_market_calendars as mcal
-   import holidays
-   from pandas.tseries.offsets import CustomBusinessDay
+import streamlit as st
+import yfinance as yf
+import pandas as pd
+from datetime import datetime, timedelta
+import pytz
+import pandas_market_calendars as mcal
+import holidays
+from pandas.tseries.offsets import CustomBusinessDay
 
    # Set page configuration
    st.set_page_config(page_title="Análisis de Volatilidad Intradía", layout="wide")

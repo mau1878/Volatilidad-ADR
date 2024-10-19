@@ -225,19 +225,18 @@ if confirm:
            else:
                st.warning(f"No se encontraron datos para el análisis de los últimos 30 días para {ticker}.")
 
-    # Analyze volatility
-    total_crossings, pos_to_neg, neg_to_pos = analyze_volatility(intraday_data, previous_close)
-
-    st.markdown(f"### Análisis para: **{ticker}**")
-    st.write(f"**Total de Cruces:** {total_crossings}")
-    st.write(f"**Cruces Positivos a Negativos:** {pos_to_neg}")
-    st.write(f"**Cruces Negativos a Positivos:** {neg_to_pos}")
-
-    # If extending analysis, get summary for the last 30 days
-    if extend_analysis:
-        summary_data = analyze_last_30_days(ticker, selected_intraday_date, ticker_set_option)
-        st.write("#### Resumen de Variaciones % en los Últimos 30 Días:")
-        st.dataframe(summary_data)
+        # Analyze volatility
+        total_crossings, pos_to_neg, neg_to_pos = analyze_volatility(intraday_data, previous_close)
+        st.markdown(f"### Análisis para: **{ticker}**")
+        st.write(f"**Total de Cruces:** {total_crossings}")
+        st.write(f"**Cruces Positivos a Negativos:** {pos_to_neg}")
+        st.write(f"**Cruces Negativos a Positivos:** {neg_to_pos}")
+    
+        # If extending analysis, get summary for the last 30 days
+        if extend_analysis:
+            summary_data = analyze_last_30_days(ticker, selected_intraday_date, ticker_set_option)
+            st.write("#### Resumen de Variaciones % en los Últimos 30 Días:")
+            st.dataframe(summary_data)
 
 # Footer
 st.markdown("---")

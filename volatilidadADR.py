@@ -197,12 +197,12 @@ if confirm:
 
       # Analyze intraday volatility
       total_crossings, pos_to_neg, neg_to_pos = analyze_volatility(intraday_data, previous_close)
-      intraday_summary = intraday_summary.append({
-          "Ticker": ticker,
-          "Cruces": total_crossings,
-          "Cruces Bajista -> Alcista": neg_to_pos,
-          "Cruces Alcista -> Bajista": pos_to_neg
-      }, ignore_index=True)
+      intraday_summary = pd.concat([intraday_summary, pd.DataFrame({
+      "Ticker": [ticker],
+      "Cruces": [total_crossings],
+      "Cruces Bajista -> Alcista": [neg_to_pos],
+      "Cruces Alcista -> Bajista": [pos_to_neg]
+  })], ignore_index=True)  
 
       # Display the results
       st.subheader(f"Resultados para {ticker}")

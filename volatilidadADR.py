@@ -190,19 +190,40 @@ def analyze_last_30_days(ticker, end_date, ticker_set):
     return summary_data
 
 # Main logic execution
+
+
+
+# Main execution block
 if confirm:
-    for ticker in tickers:
-        # Fetch and analyze intraday data
-        intraday_data = fetch_intraday_data(ticker, selected_intraday_date, interval="1m")
-        previous_close, actual_previous_date = fetch_previous_close(ticker, selected_previous_date, ticker_set_option)
+   for ticker in tickers:
+       intraday_data = fetch_intraday_data(ticker, selected_intraday_date)
+       previous_close, actual_previous_date = fetch_previous_close(ticker, selected_previous_date, ticker_set_option)
 
-        if intraday_data.empty:
-            st.warning(f"No se encontraron datos intradía para {ticker}.")
-            continue
+       # Display intraday data
+       if not intraday_data.empty:
+           st.subheader(f"Datos Intradía para {ticker} en {selected_intraday_date}")
+           st.line_chart(intraday_data['Adj Close'], use_container_width=True)
 
-        if previous_close is None:
-            st.warning(f"No se encontró el cierre anterior para {ticker}.")
-            continue
+           total_crossings, pos_to_neg, neg_to_pos = analyze_volatility(intraday_data, previous_close)
+
+           st.markdown(f"**Cruces Totales:** {total_crossings}")
+           st.markdown(f"**Cruces de Arriba a Abajo:** {pos_to_neg}")
+           st.markdown(f"**Cruces de Abajo a Arriba:** {neg_to_pos}")
+
+       # Display previous close
+       if previous_close is not None:
+           st.markdown(f"**Cierre Anterior para {ticker}:** ARS {previous_close:.2f} (Fecha: {actual_previous_date})")
+       else:
+           st.warning(f"No se encontró el cierre anterior para {ticker}.")
+
+       # Analyze last 30 days if checkbox is selected
+       if extend_analysis:
+           st.subheader(f"Análisis de los Últimos 30 Días para {ticker}")
+           last_30_days_data = analyze_last_30_days(ticker, selected_intraday_date, ticker_set_option)
+           if not last_30_days_data.empty:
+               st.dataframe(last_30_days_data)
+           else:
+               st.warning(f"No se encontraron datos para el análisis de los últimos 30 días para {ticker}.")
 
         # Analyze volatility
         total_crossings, pos_to_neg, neg_to_pos = analyze_volatility(intraday_data, previous_close)
